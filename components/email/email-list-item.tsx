@@ -146,7 +146,7 @@ export function EmailListItem({ email, selected, onClick, onContextMenu }: Email
             name={sender?.name}
             email={sender?.email}
             size="md"
-            className="flex-shrink-0 shadow-sm"
+            className="mt-1 flex-shrink-0 shadow-sm"
           />
         )}
 

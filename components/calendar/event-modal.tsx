@@ -3,12 +3,14 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { X, Trash2, Check, Users, CalendarDays, Copy } from "lucide-react";
 import { format, parseISO, addHours, addDays } from "date-fns";
 import type { CalendarEvent, Calendar, CalendarParticipant } from "@/lib/jmap/types";
 import { parseDuration } from "./event-card";
 import { ParticipantInput } from "./participant-input";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import {
   isOrganizer,
   getUserParticipantId,
@@ -71,6 +73,7 @@ export function EventModal({
 }: EventModalProps) {
   const t = useTranslations("calendar");
   const isEdit = !!event;
+  const { dialogProps: confirmDialogProps, confirm } = useConfirmDialog();
 
   const userIsOrganizer = useMemo(() => {
     if (!event) return true;
@@ -163,8 +166,6 @@ export function EventModal({
     }
     return "none";
   });
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
   const [attendees, setAttendees] = useState<{ name: string; email: string }[]>(() => {
     if (!event?.participants) return [];
     return existingParticipants
@@ -326,6 +327,28 @@ export function EventModal({
     onDuplicate(data);
   }, [event, onDuplicate]);
 
+  const hasParticipants = attendees.length > 0 || (event?.participants && Object.keys(event.participants).length > 0);
+
+  const handleDelete = useCallback(async () => {
+    if (!event || !onDelete) return;
+    const deleteMessage = hasParticipants
+      ? `${t("form.delete_confirm")} ${t("participants.cancel_notification")}`
+      : t("form.delete_confirm");
+
+    const confirmed = await confirm({
+      title: t("detail.delete_confirm"),
+      message: deleteMessage,
+      confirmText: t("events.delete"),
+      cancelText: t("form.cancel"),
+      variant: "destructive",
+    });
+
+    if (!confirmed) return;
+
+    onDelete(event.id, hasParticipants || undefined);
+    onClose();
+  }, [confirm, event, hasParticipants, onClose, onDelete, t]);
+
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -364,8 +387,6 @@ export function EventModal({
     return () => modal.removeEventListener("keydown", handler);
   }, []);
 
-  const hasParticipants = attendees.length > 0 || (event?.participants && Object.keys(event.participants).length > 0);
-
   if (isAttendeeMode && event) {
     const startD = parseISO(event.start);
     const durMin = parseDuration(event.duration);
@@ -379,8 +400,8 @@ export function EventModal({
         <div ref={modalRef} role="dialog" aria-modal="true" aria-label={event.title || t("events.no_title")} className="relative bg-background border border-border rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between px-5 py-4 border-b border-border">
             <h2 className="text-lg font-semibold truncate">{event.title || t("events.no_title")}</h2>
-            <button onClick={onClose} className="p-1 rounded hover:bg-muted transition-colors" aria-label={t("form.cancel")}>
-              <X className="w-5 h-5" />
+            <button onClick={onClose} className="p-1 rounded hover:bg-muted transition-colors flex-shrink-0 mt-0.5" aria-label={t("form.cancel")}>
+              <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
 
@@ -485,8 +506,8 @@ export function EventModal({
           <h2 className="text-lg font-semibold">
             {isEdit ? t("events.edit") : t("events.create")}
           </h2>
-          <button onClick={onClose} className="p-1 rounded hover:bg-muted transition-colors" aria-label={t("form.cancel")}>
-            <X className="w-5 h-5" />
+          <button onClick={onClose} className="p-1 rounded hover:bg-muted transition-colors flex-shrink-0 mt-0.5" aria-label={t("form.cancel")}>
+            <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
 
@@ -669,43 +690,17 @@ export function EventModal({
         <div className="flex items-center justify-between px-5 py-4 border-t border-border">
           <div className="flex items-center gap-1">
             {isEdit && onDelete && (
-              showDeleteConfirm ? (
-                <div className="flex items-center gap-2">
-                  <div>
-                    <span className="text-sm text-red-600 dark:text-red-400">
-                      {t("form.delete_confirm")}
-                    </span>
-                    {hasParticipants && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {t("participants.cancel_notification")}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => { onDelete(event!.id, hasParticipants || undefined); onClose(); }}
-                    className="text-red-600 dark:text-red-400 border-red-300 dark:border-red-700"
-                  >
-                    {t("events.delete")}
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(false)}>
-                    {t("form.cancel")}
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="text-red-600 dark:text-red-400"
-                >
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  {t("events.delete")}
-                </Button>
-              )
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDelete}
+                className="text-red-600 dark:text-red-400"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                {t("events.delete")}
+              </Button>
             )}
-            {isEdit && onDuplicate && !showDeleteConfirm && (
+            {isEdit && onDuplicate && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -728,6 +723,8 @@ export function EventModal({
           </div>
         </div>
       </div>
+
+      <ConfirmDialog {...confirmDialogProps} />
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect } fr
 import { useTranslations } from "next-intl";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import {
   X, Clock, MapPin, Video, Users, Repeat, Bell, AlignLeft,
   Pencil, Trash2, Copy, Send, Check,
@@ -127,8 +129,8 @@ export function EventDetailPopover({
   const [ready, setReady] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [noteExpanded, setNoteExpanded] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isSavingNote, setIsSavingNote] = useState(false);
+  const { dialogProps: confirmDialogProps, confirm } = useConfirmDialog();
 
   const color = getEventColor(event, calendar);
   const startDate = parseISO(event.start);
@@ -180,9 +182,11 @@ export function EventDetailPopover({
     const height = popoverRef.current.offsetHeight;
     setPosition(computePosition(anchorRect, height));
     if (!ready) requestAnimationFrame(() => setReady(true));
-  }, [anchorRect, noteExpanded, showDeleteConfirm, ready]);
+  }, [anchorRect, noteExpanded, ready]);
 
   useEffect(() => {
+    if (confirmDialogProps.isOpen) return;
+
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
       if (e.key === "e" && !noteExpanded) {
@@ -192,9 +196,11 @@ export function EventDetailPopover({
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [onClose, onEdit, noteExpanded]);
+  }, [confirmDialogProps.isOpen, onClose, onEdit, noteExpanded]);
 
   useEffect(() => {
+    if (confirmDialogProps.isOpen) return;
+
     const handleClickOutside = (e: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
         onClose();
@@ -212,7 +218,7 @@ export function EventDetailPopover({
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("scroll", handleScroll, true);
     };
-  }, [onClose]);
+  }, [confirmDialogProps.isOpen, onClose]);
 
   const handleSaveNote = useCallback(async () => {
     const trimmed = noteText.trim();
@@ -242,66 +248,86 @@ export function EventDetailPopover({
     [handleSaveNote]
   );
 
+  const handleDeleteClick = useCallback(async () => {
+    const deleteMessage = participants.length > 0
+      ? `${t("form.delete_confirm")} ${t("participants.cancel_notification")}`
+      : t("form.delete_confirm");
+
+    const confirmed = await confirm({
+      title: t("detail.delete_confirm"),
+      message: deleteMessage,
+      confirmText: t("events.delete"),
+      cancelText: t("form.cancel"),
+      variant: "destructive",
+    });
+
+    if (!confirmed) return;
+
+    onDelete();
+    onClose();
+  }, [confirm, onClose, onDelete, participants, t]);
+
   const hasParticipants = participants.length > 0;
 
   const popover = (
-    <div
-      ref={popoverRef}
-      role="dialog"
-      aria-label={event.title || t("events.no_title")}
-      className="fixed z-[60] bg-background border border-border rounded-lg shadow-xl overflow-hidden transition-[opacity,transform] duration-150 ease-out"
-      style={{
-        width: POPOVER_WIDTH,
-        maxHeight: MAX_HEIGHT,
-        top: position?.top ?? -9999,
-        left: position?.left ?? -9999,
-        opacity: ready ? 1 : 0,
-        transform: ready ? "scale(1)" : "scale(0.95)",
-        visibility: position ? "visible" : "hidden",
-      }}
-    >
-      {/* Color accent bar */}
-      <div className="h-1 w-full" style={{ backgroundColor: color }} />
+    <>
+      <div
+        ref={popoverRef}
+        role="dialog"
+        aria-label={event.title || t("events.no_title")}
+        className="fixed z-[60] bg-background border border-border rounded-lg shadow-xl overflow-hidden transition-[opacity,transform] duration-150 ease-out"
+        style={{
+          width: POPOVER_WIDTH,
+          maxHeight: MAX_HEIGHT,
+          top: position?.top ?? -9999,
+          left: position?.left ?? -9999,
+          opacity: ready ? 1 : 0,
+          transform: ready ? "scale(1)" : "scale(0.95)",
+          visibility: position ? "visible" : "hidden",
+        }}
+      >
+        {/* Color accent bar */}
+        <div className="h-1 w-full" style={{ backgroundColor: color }} />
 
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2 px-4 pt-3 pb-1">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span
-              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-              style={{ backgroundColor: color }}
-            />
-            <h3 className="text-base font-semibold truncate text-foreground">
-              {event.title || t("events.no_title")}
-            </h3>
+        {/* Header */}
+        <div className="flex items-start justify-between gap-2 px-4 pt-3 pb-1">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span
+                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: color }}
+              />
+              <h3 className="text-base font-semibold truncate text-foreground">
+                {event.title || t("events.no_title")}
+              </h3>
+            </div>
+            {calendar && (
+              <p className="text-xs text-muted-foreground mt-0.5 pl-[18px]">
+                {calendar.name}
+                {event.status === "tentative" && (
+                  <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                    {t("detail.tentative")}
+                  </span>
+                )}
+                {event.status === "cancelled" && (
+                  <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 line-through">
+                    {t("detail.cancelled")}
+                  </span>
+                )}
+              </p>
+            )}
           </div>
-          {calendar && (
-            <p className="text-xs text-muted-foreground mt-0.5 pl-[18px]">
-              {calendar.name}
-              {event.status === "tentative" && (
-                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
-                  {t("detail.tentative")}
-                </span>
-              )}
-              {event.status === "cancelled" && (
-                <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 line-through">
-                  {t("detail.cancelled")}
-                </span>
-              )}
-            </p>
-          )}
+          <button
+            onClick={onClose}
+            className="p-1 rounded hover:bg-muted transition-colors flex-shrink-0 mt-0.5"
+            aria-label={t("form.cancel")}
+          >
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1 rounded hover:bg-muted transition-colors flex-shrink-0 mt-0.5"
-          aria-label={t("form.cancel")}
-        >
-          <X className="w-4 h-4 text-muted-foreground" />
-        </button>
-      </div>
 
-      {/* Content */}
-      <div className="px-4 py-2 space-y-2.5 overflow-y-auto" style={{ maxHeight: MAX_HEIGHT - 140 }}>
+        {/* Content */}
+        <div className="px-4 py-2 space-y-2.5 overflow-y-auto" style={{ maxHeight: MAX_HEIGHT - 140 }}>
         {/* Date & Time */}
         <div className="flex items-start gap-2.5">
           <Clock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
@@ -421,11 +447,11 @@ export function EventDetailPopover({
             </p>
           </div>
         )}
-      </div>
+        </div>
 
-      {/* Quick Note */}
-      {!isAttendeeMode && (
-        <div className="px-4 py-2 border-t border-border">
+        {/* Quick Note */}
+        {!isAttendeeMode && (
+          <div className="px-4 py-2 border-t border-border">
           {noteExpanded ? (
             <div className="space-y-2">
               <textarea
@@ -470,12 +496,12 @@ export function EventDetailPopover({
               {t("detail.add_note")}
             </button>
           )}
-        </div>
-      )}
+          </div>
+        )}
 
-      {/* RSVP Bar (for attendees) */}
-      {isAttendeeMode && onRsvp && userParticipantId && (
-        <div className="px-4 py-3 border-t border-border">
+        {/* RSVP Bar (for attendees) */}
+        {isAttendeeMode && onRsvp && userParticipantId && (
+          <div className="px-4 py-3 border-t border-border">
           <p className="text-xs font-medium text-muted-foreground mb-2">
             {t("participants.rsvp_label")}
           </p>
@@ -520,63 +546,40 @@ export function EventDetailPopover({
               {t("participants.declined")}
             </Button>
           </div>
-        </div>
-      )}
-
-      {/* Action Bar */}
-      <div className="px-4 py-2.5 border-t border-border flex items-center gap-1.5">
-        {showDeleteConfirm ? (
-          <div className="flex items-center gap-2 w-full">
-            <span className="text-sm text-red-600 dark:text-red-400 flex-1">
-              {t("form.delete_confirm")}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onDelete}
-              className="text-red-600 dark:text-red-400 border-red-300 dark:border-red-700 h-7 text-xs"
-            >
-              {t("events.delete")}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowDeleteConfirm(false)}
-              className="h-7 text-xs"
-            >
-              {t("form.cancel")}
-            </Button>
           </div>
-        ) : (
-          <>
-            <Button variant="default" size="sm" onClick={onEdit} className="h-7 text-xs">
-              <Pencil className="w-3.5 h-3.5 mr-1" />
-              {t("events.edit")}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onDuplicate}
-              className="h-7 text-xs"
-              title={t("events.duplicate")}
-            >
-              <Copy className="w-3.5 h-3.5 mr-1" />
-              {t("events.duplicate")}
-            </Button>
-            <div className="flex-1" />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="h-7 text-xs text-red-600 dark:text-red-400"
-              title={t("events.delete")}
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </Button>
-          </>
         )}
+
+        {/* Action Bar */}
+        <div className="px-4 py-2.5 border-t border-border flex items-center gap-1.5">
+          <Button variant="default" size="sm" onClick={onEdit} className="h-7 text-xs">
+            <Pencil className="w-3.5 h-3.5 mr-1" />
+            {t("events.edit")}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDuplicate}
+            className="h-7 text-xs"
+            title={t("events.duplicate")}
+          >
+            <Copy className="w-3.5 h-3.5 mr-1" />
+            {t("events.duplicate")}
+          </Button>
+          <div className="flex-1" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDeleteClick}
+            className="h-7 text-xs text-red-600 dark:text-red-400"
+            title={t("events.delete")}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </Button>
+        </div>
       </div>
-    </div>
+
+      <ConfirmDialog {...confirmDialogProps} />
+    </>
   );
 
   return createPortal(popover, document.body);

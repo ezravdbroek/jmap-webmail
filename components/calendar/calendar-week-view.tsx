@@ -134,72 +134,76 @@ export function CalendarWeekView({
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden" role="grid" aria-label={t("views.week")}>
-      {hasAllDay && (
-        <div className="flex border-b border-border">
-          <div className="w-14 flex-shrink-0 text-[10px] text-muted-foreground p-1 text-right">
-            {t("events.all_day")}
-          </div>
-          <div className="flex-1 grid grid-cols-7 gap-px bg-border">
-            {weekDays.map((day) => {
-              const key = format(day, "yyyy-MM-dd");
-              const dayAllDay = allDayEvents.get(key) || [];
-              return (
-                <div key={key} className="bg-background p-0.5 min-h-[28px]">
-                  {dayAllDay.map((ev) => {
-                    const calId = Object.keys(ev.calendarIds)[0];
-                    return (
-                      <EventCard
-                        key={ev.id}
-                        event={ev}
-                        calendar={calendarMap.get(calId)}
-                        variant="chip"
-                        onClick={(rect) => onSelectEvent(ev, rect)}
-                      />
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <div className="flex border-b border-border" role="row">
-        <div className="w-14 flex-shrink-0" />
-        <div className="flex-1 grid grid-cols-7 border-l border-border">
-          {weekDays.map((day) => {
-            const todayCol = isToday(day);
-            const selected = isSameDay(day, selectedDate);
-            const fullLabel = intlFormatter.dateTime(day, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-            return (
-              <button
-                key={day.toISOString()}
-                onClick={() => onSelectDate(day)}
-                role="columnheader"
-                aria-label={fullLabel}
-                className={cn(
-                  "text-center py-2 text-sm border-r border-border last:border-r-0 transition-colors",
-                  "hover:bg-muted/50",
-                  todayCol && "font-bold",
-                )}
-              >
-                <div className="text-[10px] text-muted-foreground uppercase">
-                  {intlFormatter.dateTime(day, { weekday: "short" })}
-                </div>
-                <div className={cn(
-                  "inline-flex items-center justify-center w-7 h-7 rounded-full text-sm",
-                  todayCol && "bg-primary text-primary-foreground",
-                  selected && !todayCol && "bg-accent text-accent-foreground"
-                )}>
-                  {format(day, "d")}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
+        <div className="sticky top-0 z-30 bg-background">
+          {hasAllDay && (
+            <div className="flex border-b border-border">
+              <div className="w-14 flex-shrink-0 text-[10px] text-muted-foreground p-1 text-right">
+                {t("events.all_day")}
+              </div>
+              <div className="flex-1 grid grid-cols-7 border-l border-border">
+                {weekDays.map((day) => {
+                  const key = format(day, "yyyy-MM-dd");
+                  const dayAllDay = allDayEvents.get(key) || [];
+                  return (
+                    <div key={key} className="bg-background p-0.5 min-h-[28px] border-r border-border last:border-r-0">
+                      <div className="space-y-0.5">
+                        {dayAllDay.map((ev) => {
+                          const calId = Object.keys(ev.calendarIds)[0];
+                          return (
+                            <EventCard
+                              key={ev.id}
+                              event={ev}
+                              calendar={calendarMap.get(calId)}
+                              variant="chip"
+                              onClick={(rect) => onSelectEvent(ev, rect)}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="flex border-b border-border" role="row">
+            <div className="w-14 flex-shrink-0 bg-background" />
+            <div className="flex-1 grid grid-cols-7 border-l border-border bg-background">
+              {weekDays.map((day) => {
+                const todayCol = isToday(day);
+                const selected = isSameDay(day, selectedDate);
+                const fullLabel = intlFormatter.dateTime(day, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+                return (
+                  <button
+                    key={day.toISOString()}
+                    onClick={() => onSelectDate(day)}
+                    role="columnheader"
+                    aria-label={fullLabel}
+                    className={cn(
+                      "text-center py-2 text-sm border-r border-border last:border-r-0 transition-colors",
+                      "hover:bg-muted/50",
+                      todayCol && "font-bold",
+                    )}
+                  >
+                    <div className="text-[10px] text-muted-foreground uppercase">
+                      {intlFormatter.dateTime(day, { weekday: "short" })}
+                    </div>
+                    <div className={cn(
+                      "inline-flex items-center justify-center w-7 h-7 rounded-full text-sm",
+                      todayCol && "bg-primary text-primary-foreground",
+                      selected && !todayCol && "bg-accent text-accent-foreground"
+                    )}>
+                      {format(day, "d")}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
         <div className="flex relative" style={{ height: 24 * HOUR_HEIGHT }}>
           <div className="w-14 flex-shrink-0">
             {HOURS.map((h) => (

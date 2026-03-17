@@ -88,7 +88,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
             name={sender?.name}
             email={sender?.email}
             size="md"
-            className="flex-shrink-0 shadow-sm"
+            className="mt-1 flex-shrink-0 shadow-sm"
           />
 
           <div className="flex-1 min-w-0">
@@ -267,7 +267,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
               name={latestEmail.from?.[0]?.name}
               email={latestEmail.from?.[0]?.email}
               size="md"
-              className="flex-shrink-0 shadow-sm"
+              className="mt-1 flex-shrink-0 shadow-sm"
             />
 
             <div className="flex-1 min-w-0">
