@@ -338,12 +338,14 @@ export interface CalendarEvent {
   virtualLocations: Record<string, CalendarVirtualLocation> | null;
   links: Record<string, CalendarLink> | null;
   relatedTo: Record<string, CalendarRelation> | null;
+  organizerCalendarAddress?: string | null;
 }
 
 export interface CalendarParticipant {
   '@type': 'Participant';
   name: string;
-  email: string;
+  email?: string;
+  calendarAddress?: string | null;
   description: string | null;
   sendTo: Record<string, string> | null;
   kind: 'individual' | 'group' | 'location' | 'resource';

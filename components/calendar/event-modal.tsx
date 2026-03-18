@@ -59,6 +59,17 @@ function buildDuration(startDate: Date, endDate: Date): string {
 type RecurrenceOption = "none" | "daily" | "weekly" | "monthly" | "yearly";
 type AlertOption = "none" | "at_time" | "5" | "15" | "30" | "60" | "1440";
 
+// Build an RFC5545-style UID (`id@domain`) using organizer email domain when available.
+function generateUid(seedEmail?: string): string {
+  const domainFromEmail = seedEmail?.includes("@") ? seedEmail.split("@")[1] : "";
+  const host = (typeof window !== "undefined" && window.location.hostname) ? window.location.hostname : "";
+  const domain = domainFromEmail || host || "localhost";
+  const id = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  return `${id}@${domain}`;
+}
+
 export function EventModal({
   event,
   calendars,
@@ -168,8 +179,9 @@ export function EventModal({
   });
   const [attendees, setAttendees] = useState<{ name: string; email: string }[]>(() => {
     if (!event?.participants) return [];
+    const ownEmails = new Set(currentUserEmails.map(e => e.toLowerCase()));
     return existingParticipants
-      .filter(p => !p.isOrganizer)
+      .filter(p => !p.isOrganizer && p.email && !ownEmails.has(p.email.toLowerCase()))
       .map(p => ({ name: p.name, email: p.email }));
   });
   const [sendInvitations, setSendInvitations] = useState(true);
@@ -180,8 +192,11 @@ export function EventModal({
   }, [event]);
 
   const handleAddAttendee = useCallback((p: { name: string; email: string }) => {
+    const email = p.email.trim().toLowerCase();
+    if (!email) return;
+    if (currentUserEmails.some(e => e.toLowerCase() === email)) return;
     setAttendees(prev => [...prev, p]);
-  }, []);
+  }, [currentUserEmails]);
 
   const handleRemoveAttendee = useCallback((email: string) => {
     setAttendees(prev => prev.filter(a => a.email.toLowerCase() !== email.toLowerCase()));
@@ -213,6 +228,7 @@ export function EventModal({
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     const data: Partial<CalendarEvent> = {
+      "@type": "Event",
       title: trimmedTitle,
       description: description.trim(),
       start: startStr,
@@ -224,6 +240,11 @@ export function EventModal({
       freeBusyStatus: "busy",
       privacy: "public",
     };
+
+    if (!event?.uid) {
+      const seed = currentUserEmails[0] || existingParticipants.find(p => p.isOrganizer)?.email;
+      data.uid = generateUid(seed);
+    }
 
     if (location.trim()) {
       data.locations = {
@@ -283,18 +304,32 @@ export function EventModal({
       data.alerts = null;
     }
 
-    if (attendees.length > 0 && currentUserEmails.length > 0) {
-      const organizerEmail = currentUserEmails[0];
-      const organizerName = existingParticipants.find(p => p.isOrganizer)?.name || "";
+    const ownEmails = new Set(currentUserEmails.map(e => e.toLowerCase()));
+    const existingOrganizer = existingParticipants.find(p => p.isOrganizer);
+    const organizerEmail = (currentUserEmails[0] || existingOrganizer?.email || "").toLowerCase();
+    const invitees = attendees.filter((a) => {
+      const email = a.email?.toLowerCase();
+      if (!email) return false;
+      if (ownEmails.has(email)) return false;
+      if (organizerEmail && email === organizerEmail) return false;
+      return true;
+    });
+
+    if (invitees.length > 0) {
+      const organizerName = existingOrganizer?.name || "";
+      const organizerCalendarAddress = organizerEmail ? `mailto:${organizerEmail}` : null;
+
       data.participants = buildParticipantMap(
-        { name: organizerName, email: organizerEmail },
-        attendees
+        organizerEmail ? { name: organizerName, email: organizerEmail } : null,
+        invitees
       ) as Record<string, CalendarParticipant>;
+      data.organizerCalendarAddress = organizerCalendarAddress;
     } else if (attendees.length === 0 && event?.participants) {
       data.participants = null;
+      data.organizerCalendarAddress = null;
     }
 
-    const shouldSendScheduling = attendees.length > 0 && sendInvitations;
+    const shouldSendScheduling = invitees.length > 0 && sendInvitations;
     onSave(data, shouldSendScheduling);
   }, [title, description, location, startDate, startTime, endDate, endTime, allDay, calendarId, recurrence, alert, attendees, sendInvitations, currentUserEmails, existingParticipants, event, onSave]);
 

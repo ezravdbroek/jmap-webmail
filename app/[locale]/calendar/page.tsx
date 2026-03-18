@@ -43,7 +43,7 @@ export default function CalendarPage() {
   const t = useTranslations("calendar");
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
-  const { client, isAuthenticated } = useAuthStore();
+  const { client, isAuthenticated, username } = useAuthStore();
   const {
     calendars, events, selectedDate, viewMode, selectedCalendarIds,
     isLoading, isLoadingEvents, supportsCalendar, error,
@@ -53,10 +53,12 @@ export default function CalendarPage() {
   const { firstDayOfWeek, timeFormat } = useSettingsStore();
   const { identities } = useIdentityStore();
 
-  const currentUserEmails = useMemo(() =>
-    identities.map(id => id.email).filter(Boolean),
-    [identities]
-  );
+  const currentUserEmails = useMemo(() => {
+    const identityEmails = identities.map(id => id.email).filter(Boolean);
+    if (identityEmails.length > 0) return identityEmails;
+    if (username && username.includes("@")) return [username];
+    return [];
+  }, [identities, username]);
 
   const [showEventModal, setShowEventModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);

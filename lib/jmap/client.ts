@@ -83,6 +83,35 @@ const EMAIL_LIST_PROPERTIES = [
   "hasAttachment",
 ] as const;
 
+const CALENDAR_EVENT_PROPERTIES = [
+  "id",
+  "uid",
+  "calendarIds",
+  "title",
+  "description",
+  "descriptionContentType",
+  "start",
+  "duration",
+  "timeZone",
+  "showWithoutTime",
+  "status",
+  "freeBusyStatus",
+  "privacy",
+  "color",
+  "keywords",
+  "locations",
+  "virtualLocations",
+  "links",
+  "participants",
+  "organizerCalendarAddress",
+  "alerts",
+  "recurrenceRules",
+  "excludedRecurrenceRules",
+  "recurrenceOverrides",
+  "recurrenceId",
+  "isOrigin",
+] as const;
+
 function namespaceMailboxIds(emails: Email[], accountId: string): void {
   for (const email of emails) {
     if (!email.mailboxIds) continue;
@@ -1948,6 +1977,7 @@ export class JMAPClient {
         ["CalendarEvent/get", {
           accountId,
           "#ids": { resultOf: "0", name: "CalendarEvent/query", path: "/ids" },
+          properties: [...CALENDAR_EVENT_PROPERTIES],
         }, "1"]
       ], this.calendarUsing());
 
@@ -1983,6 +2013,7 @@ export class JMAPClient {
         ["CalendarEvent/get", {
           accountId,
           "#ids": { resultOf: "0", name: "CalendarEvent/query", path: "/ids" },
+          properties: [...CALENDAR_EVENT_PROPERTIES],
         }, "1"]
       ], this.calendarUsing());
 
@@ -2003,6 +2034,7 @@ export class JMAPClient {
         ["CalendarEvent/get", {
           accountId,
           ids: [id],
+          properties: [...CALENDAR_EVENT_PROPERTIES],
         }, "0"]
       ], this.calendarUsing());
 
