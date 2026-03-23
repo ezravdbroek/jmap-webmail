@@ -1,4 +1,4 @@
-import type { Email, Mailbox, StateChange, AccountStates, Thread, Identity, EmailAddress, ContactCard, AddressBook, VacationResponse, Calendar, CalendarEvent, CalendarEventFilter } from "./types";
+import type { Email, Mailbox, StateChange, AccountStates, Thread, Identity, EmailAddress, ContactCard, AddressBook, VacationResponse, Calendar, CalendarEvent, CalendarEventFilter, WebSocketPushEnable } from "./types";
 import type { SieveScript, SieveCapabilities } from "./sieve-types";
 import { retryWithBackoff } from './retry';
 
@@ -143,6 +143,12 @@ export class JMAPClient {
   private lastPingTime: number = 0;
   private pingInterval: NodeJS.Timeout | null = null;
   private accounts: Record<string, JMAPAccount> = {};
+  private webSocketUrl: string = "";
+  private webSocket: WebSocket | null = null;
+  private wsReconnectTimer: NodeJS.Timeout | null = null;
+  private wsReconnectDelay: number = 1000;
+  private wsHeartbeatTimer: NodeJS.Timeout | null = null;
+  private wsConnected: boolean = false;
   private eventSource: EventSource | null = null;
   private stateChangeCallback: ((change: StateChange) => void) | null = null;
   private lastStates: AccountStates = {};
@@ -225,6 +231,12 @@ export class JMAPClient {
       this.apiUrl = session.apiUrl;
       this.downloadUrl = session.downloadUrl;
       this.accounts = session.accounts || {};
+
+      // Extract WebSocket URL from capabilities
+      const wsCapability = this.capabilities['urn:ietf:params:jmap:websocket'] as { url?: string; supportsPush?: boolean } | undefined;
+      if (wsCapability?.url && wsCapability?.supportsPush) {
+        this.webSocketUrl = this.rewriteWebSocketUrl(wsCapability.url);
+      }
 
       const mailAccount = session.primaryAccounts?.["urn:ietf:params:jmap:mail"];
       const fallbackAccount = Object.keys(this.accounts)[0];
@@ -323,6 +335,18 @@ export class JMAPClient {
     }
     if (session.eventSourceUrl) {
       session.eventSourceUrl = this.rewriteSessionUrl(session.eventSourceUrl);
+    }
+  }
+
+  private rewriteWebSocketUrl(url: string): string {
+    try {
+      const parsed = new URL(url);
+      const server = new URL(this.serverUrl);
+      // Rewrite to use the same host as serverUrl, with wss:// protocol
+      const protocol = server.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${protocol}//${server.host}${parsed.pathname}${parsed.search}`;
+    } catch {
+      return url;
     }
   }
 
@@ -2207,13 +2231,101 @@ export class JMAPClient {
     'SieveScript/get': 'SieveScript',
   };
 
-  // Polling-based push since EventSource cannot send Authorization headers
   setupPushNotifications(): boolean {
+    // Try WebSocket push first, fallback to polling
+    if (this.webSocketUrl && typeof WebSocket !== 'undefined') {
+      try {
+        this.setupWebSocketPush();
+        return true;
+      } catch {
+        // Fallback to polling
+      }
+    }
+
+    // Polling fallback
     this.fetchCurrentStates();
     this.pollingInterval = setInterval(() => {
       this.checkForStateChanges();
     }, 15_000);
     return true;
+  }
+
+  private setupWebSocketPush(): void {
+    if (this.webSocket) {
+      this.webSocket.close();
+    }
+
+    // Add auth token as query parameter (browsers can't set headers on WebSocket)
+    const authToken = this.authHeader.replace(/^(Basic|Bearer)\s+/i, '');
+    const separator = this.webSocketUrl.includes('?') ? '&' : '?';
+    const wsUrl = `${this.webSocketUrl}${separator}access_token=${encodeURIComponent(authToken)}`;
+
+    const ws = new WebSocket(wsUrl, 'jmap');
+    this.webSocket = ws;
+
+    ws.onopen = () => {
+      this.wsConnected = true;
+      this.wsReconnectDelay = 1000; // Reset backoff
+
+      // Enable push notifications for all data types
+      const pushEnable: WebSocketPushEnable = {
+        '@type': 'WebSocketPushEnable',
+        dataTypes: null, // null = all types
+      };
+      ws.send(JSON.stringify(pushEnable));
+
+      // Start heartbeat to keep connection alive
+      this.wsHeartbeatTimer = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ '@type': 'Request', using: ['urn:ietf:params:jmap:core'], methodCalls: [] }));
+        }
+      }, 30_000);
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data['@type'] === 'StateChange' && this.stateChangeCallback) {
+          this.stateChangeCallback(data as StateChange);
+        }
+      } catch {
+        // Ignore unparseable messages
+      }
+    };
+
+    ws.onclose = () => {
+      this.wsConnected = false;
+      this.clearWsHeartbeat();
+      this.scheduleWsReconnect();
+    };
+
+    ws.onerror = () => {
+      // onclose will fire after onerror, reconnect happens there
+    };
+  }
+
+  private scheduleWsReconnect(): void {
+    if (this.wsReconnectTimer) return;
+    if (!this.stateChangeCallback) return; // Don't reconnect if push was closed
+
+    this.wsReconnectTimer = setTimeout(() => {
+      this.wsReconnectTimer = null;
+      try {
+        this.setupWebSocketPush();
+      } catch {
+        // Will retry via onclose
+      }
+    }, this.wsReconnectDelay);
+
+    // Exponential backoff: 1s, 2s, 4s, 8s, 16s, max 30s
+    this.wsReconnectDelay = Math.min(this.wsReconnectDelay * 2, 30_000);
+  }
+
+  private clearWsHeartbeat(): void {
+    if (this.wsHeartbeatTimer) {
+      clearInterval(this.wsHeartbeatTimer);
+      this.wsHeartbeatTimer = null;
+    }
   }
 
   private buildStatePollingRequest(): { using: string[]; methodCalls: JMAPMethodCall[] } {
@@ -2303,6 +2415,19 @@ export class JMAPClient {
   }
 
   closePushNotifications(): void {
+    // Close WebSocket
+    if (this.webSocket) {
+      this.webSocket.close();
+      this.webSocket = null;
+    }
+    this.wsConnected = false;
+    this.clearWsHeartbeat();
+    if (this.wsReconnectTimer) {
+      clearTimeout(this.wsReconnectTimer);
+      this.wsReconnectTimer = null;
+    }
+
+    // Close polling
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval);
       this.pollingInterval = null;

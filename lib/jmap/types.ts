@@ -507,6 +507,16 @@ export interface StateChange {
   };
 }
 
+export interface WebSocketPushEnable {
+  '@type': 'WebSocketPushEnable';
+  dataTypes: string[] | null;
+  pushState?: string;
+}
+
+export interface WebSocketPushDisable {
+  '@type': 'WebSocketPushDisable';
+}
+
 export interface PushSubscription {
   id: string;
   deviceClientId: string;
