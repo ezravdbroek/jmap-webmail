@@ -14,7 +14,6 @@ interface StalwartWebhookBody {
   events?: StalwartEvent[];
 }
 
-// Event types that indicate new mail delivery
 const NEW_MAIL_EVENTS = new Set([
   'message-ingest.ham',
   'message-ingest.spam',
@@ -29,77 +28,56 @@ interface JmapEmail {
 }
 
 async function fetchLatestEmail(username: string): Promise<JmapEmail | null> {
-  const serverUrl = process.env.JMAP_SERVER_URL;
+  const internalUrl = process.env.JMAP_INTERNAL_URL || process.env.JMAP_SERVER_URL;
   const adminUser = process.env.JMAP_ADMIN_USER;
   const adminPassword = process.env.JMAP_ADMIN_PASSWORD;
 
-  if (!serverUrl || !adminUser || !adminPassword) {
-    return null;
-  }
+  if (!internalUrl || !adminUser || !adminPassword) return null;
+
+  const adminAuth = 'Basic ' + Buffer.from(`${adminUser}:${adminPassword}`).toString('base64');
 
   try {
-    // First get the JMAP session to find the API URL and account ID
-    const sessionRes = await fetch(`${serverUrl}/.well-known/jmap`, {
-      headers: {
-        'Authorization': 'Basic ' + Buffer.from(`${adminUser}:${adminPassword}`).toString('base64'),
-      },
+    // Step 1: Get the user's credentials via Stalwart admin API
+    const principalRes = await fetch(`${internalUrl}/api/principal?filter=${encodeURIComponent(username)}`, {
+      headers: { 'Authorization': adminAuth },
     });
+    if (!principalRes.ok) return null;
 
+    const principalData = await principalRes.json();
+    const user = principalData?.data?.items?.[0];
+    if (!user?.secrets?.[0]) return null;
+
+    // Step 2: Log in as the user to get their JMAP session
+    const userAuth = 'Basic ' + Buffer.from(`${username}:${user.secrets[0]}`).toString('base64');
+
+    const sessionRes = await fetch(`${internalUrl}/.well-known/jmap`, {
+      headers: { 'Authorization': userAuth },
+    });
     if (!sessionRes.ok) return null;
+
     const session = await sessionRes.json();
-    const apiUrl = session.apiUrl;
+    const apiUrl = session.apiUrl?.replace(/https?:\/\/[^/]+/, internalUrl);
+    const accountId = Object.keys(session.accounts || {})[0];
 
-    // Find account ID for the target user
-    const accounts = session.accounts || {};
-    let accountId: string | null = null;
-    for (const [id, account] of Object.entries(accounts)) {
-      const acc = account as { name?: string };
-      if (acc.name === username || id === username) {
-        accountId = id;
-        break;
-      }
-    }
+    if (!apiUrl || !accountId) return null;
 
-    // If we can't find the account via admin session, try using the username as master auth
-    // Stalwart supports "admin%username" authentication for impersonation
-    const authUser = accountId ? adminUser : `${adminUser}%${username}`;
-    const authHeader = 'Basic ' + Buffer.from(`${authUser}:${adminPassword}`).toString('base64');
-
-    // Re-fetch session with impersonation if needed
-    let targetApiUrl = apiUrl;
-    let targetAccountId = accountId;
-
-    if (!accountId) {
-      const impersonateRes = await fetch(`${serverUrl}/.well-known/jmap`, {
-        headers: { 'Authorization': authHeader },
-      });
-      if (!impersonateRes.ok) return null;
-      const impSession = await impersonateRes.json();
-      targetApiUrl = impSession.apiUrl;
-      const impAccounts = impSession.accounts || {};
-      targetAccountId = Object.keys(impAccounts)[0] || null;
-    }
-
-    if (!targetAccountId || !targetApiUrl) return null;
-
-    // Fetch the latest email from inbox
-    const jmapRes = await fetch(targetApiUrl, {
+    // Step 3: Fetch the latest email
+    const jmapRes = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Authorization': authHeader,
+        'Authorization': userAuth,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         using: ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail'],
         methodCalls: [
           ['Email/query', {
-            accountId: targetAccountId,
-            filter: { inMailbox: null },
+            accountId,
             sort: [{ property: 'receivedAt', isAscending: false }],
             limit: 1,
           }, '0'],
           ['Email/get', {
-            accountId: targetAccountId,
+            accountId,
             '#ids': { resultOf: '0', name: 'Email/query', path: '/ids' },
             properties: ['from', 'subject', 'preview'],
           }, '1'],
@@ -110,7 +88,6 @@ async function fetchLatestEmail(username: string): Promise<JmapEmail | null> {
     if (!jmapRes.ok) return null;
     const jmapData = await jmapRes.json();
 
-    // Extract email from response
     const emailGetResponse = jmapData.methodResponses?.find(
       (r: [string]) => r[0] === 'Email/get'
     );
@@ -128,7 +105,6 @@ async function fetchLatestEmail(username: string): Promise<JmapEmail | null> {
 
 export async function POST(request: NextRequest) {
   try {
-    // Validate webhook secret via Authorization header or Signature Key
     const webhookSecret = process.env.PUSH_WEBHOOK_SECRET;
     if (webhookSecret) {
       const authHeader = request.headers.get('authorization');
@@ -139,8 +115,6 @@ export async function POST(request: NextRequest) {
     }
 
     const body = (await request.json()) as StalwartWebhookBody;
-
-    // Stalwart sends { events: [...] }
     const events = body.events;
     if (!events || !Array.isArray(events)) {
       logger.warn('Webhook received with no events array');
@@ -150,19 +124,14 @@ export async function POST(request: NextRequest) {
     let notificationsSent = 0;
 
     for (const event of events) {
-      // Only process new mail delivery events
-      if (!NEW_MAIL_EVENTS.has(event.type)) {
-        continue;
-      }
+      if (!NEW_MAIL_EVENTS.has(event.type)) continue;
 
-      // accountId in Stalwart is typically the email address
       const username = event.data?.accountId as string | undefined;
       if (!username) {
         logger.debug(`Skipping event ${event.type}: no accountId`);
         continue;
       }
 
-      // Try to fetch email details for a rich notification
       const email = await fetchLatestEmail(username);
 
       const fromName = email?.from?.[0]?.name || email?.from?.[0]?.email;
