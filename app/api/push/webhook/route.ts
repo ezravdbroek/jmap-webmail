@@ -107,8 +107,18 @@ export async function POST(request: NextRequest) {
   try {
     const webhookSecret = process.env.PUSH_WEBHOOK_SECRET;
     if (webhookSecret) {
-      const authHeader = request.headers.get('authorization');
-      if (authHeader !== `Bearer ${webhookSecret}` && authHeader !== webhookSecret) {
+      const authHeader = request.headers.get('authorization') || '';
+      // Accept: Bearer <secret>, Basic <base64>, or raw secret
+      const isBearer = authHeader === `Bearer ${webhookSecret}`;
+      const isRaw = authHeader === webhookSecret;
+      // Stalwart sends Basic auth with username + secret
+      const isBasic = authHeader.startsWith('Basic ') && (() => {
+        try {
+          const decoded = Buffer.from(authHeader.slice(6), 'base64').toString();
+          return decoded.includes(webhookSecret);
+        } catch { return false; }
+      })();
+      if (!isBearer && !isRaw && !isBasic) {
         logger.warn('Webhook request with invalid secret');
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
