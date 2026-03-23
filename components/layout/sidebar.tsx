@@ -576,6 +576,33 @@ export function Sidebar({
       )}
       style={!isCollapsed ? { width: `var(--sidebar-width, ${sidebarWidth}px)` } : undefined}
     >
+      {/* Brandways Logo */}
+      <div className={cn(
+        "flex items-center justify-center border-b border-border",
+        isCollapsed ? "px-2 py-3" : "px-4 py-4"
+      )}>
+        {isCollapsed ? (
+          <img
+            src="/brandways-icon.svg"
+            alt="Brandways"
+            className="h-8 w-auto"
+          />
+        ) : (
+          <>
+            <img
+              src="/brandways-logo.svg"
+              alt="Brandways"
+              className="h-8 w-auto block dark:!hidden"
+            />
+            <img
+              src="/brandways-logo-dark.svg"
+              alt="Brandways"
+              className="h-8 w-auto !hidden dark:!block"
+            />
+          </>
+        )}
+      </div>
+
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
         <Button

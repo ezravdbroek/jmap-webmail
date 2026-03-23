@@ -302,9 +302,16 @@ export default function LoginPage() {
       <div className="w-full max-w-sm mx-auto px-4">
         {/* Logo */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 mb-6 shadow-lg shadow-primary/5">
-            <Mail className="w-10 h-10 text-primary" />
-          </div>
+          <img
+            src="/brandways-logo.svg"
+            alt="Brandways"
+            className="h-12 mx-auto mb-6 block dark:!hidden"
+          />
+          <img
+            src="/brandways-logo-dark.svg"
+            alt="Brandways"
+            className="h-12 mx-auto mb-6 !hidden dark:!block"
+          />
           <h1 className="text-3xl font-light text-foreground tracking-tight">
             {appName}
           </h1>
