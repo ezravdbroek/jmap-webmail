@@ -2255,10 +2255,11 @@ export class JMAPClient {
       this.webSocket.close();
     }
 
-    // Add auth token as query parameter (browsers can't set headers on WebSocket)
-    const authToken = this.authHeader.replace(/^(Basic|Bearer)\s+/i, '');
-    const separator = this.webSocketUrl.includes('?') ? '&' : '?';
-    const wsUrl = `${this.webSocketUrl}${separator}access_token=${encodeURIComponent(authToken)}`;
+    // Embed credentials in the WebSocket URL for authentication
+    const parsed = new URL(this.webSocketUrl);
+    parsed.username = encodeURIComponent(this.username);
+    parsed.password = encodeURIComponent(this.password);
+    const wsUrl = parsed.toString();
 
     const ws = new WebSocket(wsUrl, 'jmap');
     this.webSocket = ws;
