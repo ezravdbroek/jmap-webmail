@@ -17,6 +17,7 @@ import { useTemplateStore } from "@/stores/template-store";
 import { SubAddressHelper } from "@/components/identity/sub-address-helper";
 import { generateSubAddress } from "@/lib/sub-addressing";
 import { substitutePlaceholders } from "@/lib/template-utils";
+import { hapticSuccess } from "@/lib/haptics";
 import { TemplatePicker } from "@/components/templates/template-picker";
 import { TemplateForm } from "@/components/templates/template-form";
 import type { EmailTemplate } from "@/lib/template-types";
@@ -490,6 +491,7 @@ export function EmailComposer({
         identityId: currentIdentity?.id,
       });
 
+      hapticSuccess();
       setTo("");
       setCc("");
       setBcc("");

@@ -5,12 +5,13 @@ import { formatDate } from "@/lib/utils";
 import { Email } from "@/lib/jmap/types";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
-import { Paperclip, Star, Circle, CheckSquare, Square } from "lucide-react";
+import { Paperclip, Star, Circle, CheckSquare, Square, Trash2, Archive } from "lucide-react";
 import { useEmailStore } from "@/stores/email-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailDrag } from "@/hooks/use-email-drag";
 import { useLongPress } from "@/hooks/use-long-press";
+import { useSwipeAction } from "@/hooks/use-swipe-action";
 import { EmailIdentityBadge } from "./email-identity-badge";
 
 interface EmailListItemProps {
@@ -18,6 +19,8 @@ interface EmailListItemProps {
   selected?: boolean;
   onClick?: () => void;
   onContextMenu?: (e: React.MouseEvent, email: Email) => void;
+  onSwipeDelete?: (email: Email) => void;
+  onSwipeArchive?: (email: Email) => void;
 }
 
 // Color tag mapping - using lighter backgrounds for better readability
@@ -42,7 +45,7 @@ const getEmailColor = (keywords: Record<string, boolean> | undefined) => {
   return null;
 };
 
-export function EmailListItem({ email, selected, onClick, onContextMenu }: EmailListItemProps) {
+export function EmailListItem({ email, selected, onClick, onContextMenu, onSwipeDelete, onSwipeArchive }: EmailListItemProps) {
   const t = useTranslations('email_viewer');
   const { selectedEmailIds, toggleEmailSelection, selectedMailbox } = useEmailStore();
   const showPreview = useSettingsStore((state) => state.showPreview);
@@ -71,6 +74,12 @@ export function EmailListItem({ email, selected, onClick, onContextMenu }: Email
     onContextMenu?.(e, email);
   };
 
+  const { swipeOffset, swipeDirection, handlers: swipeHandlers } = useSwipeAction({
+    onSwipeLeft: () => onSwipeDelete?.(email),
+    onSwipeRight: () => onSwipeArchive?.(email),
+    threshold: 80,
+  });
+
   const longPressHandlers = useLongPress({
     onLongPress: (e) => {
       if (onContextMenu) {
@@ -88,9 +97,22 @@ export function EmailListItem({ email, selected, onClick, onContextMenu }: Email
   });
 
   return (
+    <div className="relative overflow-hidden">
+      {/* Swipe background indicators */}
+      {swipeDirection === 'right' && (
+        <div className="absolute inset-0 bg-blue-500 flex items-center px-4">
+          <Archive className="w-5 h-5 text-white" />
+        </div>
+      )}
+      {swipeDirection === 'left' && (
+        <div className="absolute inset-0 bg-red-500 flex items-center justify-end px-4">
+          <Trash2 className="w-5 h-5 text-white" />
+        </div>
+      )}
     <div
       {...dragHandlers}
       {...longPressHandlers}
+      {...swipeHandlers}
       className={cn(
         "email-list-item relative group cursor-pointer transition-all duration-200 border-b border-border",
         // Apply color tag as background, with selected and unread states
@@ -110,7 +132,11 @@ export function EmailListItem({ email, selected, onClick, onContextMenu }: Email
       )}
       onClick={onClick}
       onContextMenu={handleContextMenu}
-      style={{ minHeight: 'var(--list-item-height)' }}
+      style={{
+        minHeight: 'var(--list-item-height)',
+        transform: swipeOffset ? `translateX(${swipeOffset}px)` : undefined,
+        transition: swipeOffset ? 'none' : 'transform 0.2s ease-out',
+      }}
     >
       <div className="flex items-start gap-3 px-4" style={{
         paddingTop: 'calc((var(--list-item-height) - 40px) / 2)',
@@ -211,6 +237,7 @@ export function EmailListItem({ email, selected, onClick, onContextMenu }: Email
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 }

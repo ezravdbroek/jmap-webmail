@@ -59,8 +59,9 @@ export default async function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#1a1a2e" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <link rel="apple-touch-icon" href="/brandways-icon.svg" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Brandways Mail" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <script
           nonce={nonce}
           suppressHydrationWarning

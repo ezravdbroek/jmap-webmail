@@ -18,6 +18,8 @@ import { useTranslations } from "next-intl";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { SearchChips } from "@/components/search/search-chips";
 import { isFilterEmpty, DEFAULT_SEARCH_FILTERS } from "@/lib/jmap/search-utils";
+import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
+import { Loader2 as RefreshLoader } from "lucide-react";
 
 interface EmailListProps {
   emails: Email[];
@@ -98,6 +100,13 @@ export function EmailList({
   const parentRef = useRef<HTMLDivElement>(null);
   const listDensity = useSettingsStore((state) => state.listDensity);
   const showPreview = useSettingsStore((state) => state.showPreview);
+  const { refreshCurrentMailbox } = useEmailStore();
+
+  const { pullDistance, isRefreshing, handlers: pullHandlers } = usePullToRefresh({
+    onRefresh: async () => {
+      if (client) await refreshCurrentMailbox(client);
+    },
+  });
 
   const estimateSize = useCallback(() => {
     const base = { 'extra-compact': 44, compact: 72, regular: 88, comfortable: 104 }[listDensity];
@@ -332,7 +341,20 @@ export function EmailList({
       </div>
 
       {/* Email List */}
-      <div ref={parentRef} className="flex-1 overflow-y-auto bg-background relative">
+      <div
+        ref={parentRef}
+        className="flex-1 overflow-y-auto bg-background relative"
+        {...pullHandlers}
+      >
+        {/* Pull to refresh indicator */}
+        {(pullDistance > 0 || isRefreshing) && (
+          <div
+            className="flex items-center justify-center py-2 text-muted-foreground"
+            style={{ height: isRefreshing ? 40 : pullDistance }}
+          >
+            <RefreshLoader className={cn("w-5 h-5", isRefreshing && "animate-spin")} />
+          </div>
+        )}
         {/* Loading overlay */}
         {isLoading && emails.length > 0 && (
           <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center animate-in fade-in duration-150">

@@ -21,6 +21,7 @@ import { useDeviceDetection } from "@/hooks/use-media-query";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { debug } from "@/lib/debug";
 import { playNotificationSound } from "@/lib/notification-sound";
+import { updateBadgeCount } from "@/lib/badge";
 import { cn } from "@/lib/utils";
 import {
   ErrorBoundary,
@@ -227,6 +228,10 @@ export default function Home() {
     }
 
     document.title = title;
+
+    // Update PWA badge count with total inbox unread
+    const inbox = mailboxes.find(mb => mb.role === 'inbox');
+    updateBadgeCount(inbox?.unreadEmails || 0);
   }, [showComposer, composerMode, selectedEmail, selectedMailbox, mailboxes, t, tCommon]);
 
   // Check auth on mount
