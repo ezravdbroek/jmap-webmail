@@ -1448,6 +1448,12 @@
     "permission_denied": "Toestemming voor meldingen is geweigerd",
     "subscribed": "Pushmeldingen ingeschakeld",
     "unsubscribed": "Pushmeldingen uitgeschakeld",
-    "not_supported": "Pushmeldingen worden niet ondersteund in deze browser"
+    "not_supported": "Pushmeldingen worden niet ondersteund in deze browser",
+    "settings_title": "Pushmeldingen",
+    "settings_description": "Ontvang meldingen wanneer er nieuwe e-mail binnenkomt, ook wanneer de app gesloten is",
+    "resubscribe_label": "Meldingen inschakelen",
+    "resubscribe_description": "Vraag toestemming en abonneer op pushmeldingen",
+    "blocked_label": "Meldingen geblokkeerd",
+    "blocked_description": "Meldingen worden geblokkeerd door je browser. Ga naar je browserinstellingen om meldingen voor deze site toe te staan."
   }
 }

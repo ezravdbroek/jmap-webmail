@@ -741,7 +741,7 @@ export default function Home() {
 
   return (
     <DragDropProvider>
-      <div className="flex h-screen bg-background overflow-hidden">
+      <div className="flex h-dvh bg-background overflow-hidden">
         {/* Desktop Navigation Rail */}
         {!isMobile && !isTablet && (
           <div className="w-14 border-r border-border bg-secondary flex flex-col items-center flex-shrink-0">

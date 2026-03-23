@@ -1446,6 +1446,12 @@
     "permission_denied": "El permiso de notificación fue denegado",
     "subscribed": "Notificaciones push activadas",
     "unsubscribed": "Notificaciones push desactivadas",
-    "not_supported": "Las notificaciones push no son compatibles con este navegador"
+    "not_supported": "Las notificaciones push no son compatibles con este navegador",
+    "settings_title": "Notificaciones push",
+    "settings_description": "Recibe notificaciones cuando llegue un nuevo correo, incluso cuando la aplicación esté cerrada",
+    "resubscribe_label": "Activar notificaciones",
+    "resubscribe_description": "Solicitar permiso y suscribirse a las notificaciones push",
+    "blocked_label": "Notificaciones bloqueadas",
+    "blocked_description": "Las notificaciones están bloqueadas por tu navegador. Ve a la configuración de tu navegador para permitir notificaciones en este sitio."
   }
 }

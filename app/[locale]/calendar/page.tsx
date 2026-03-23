@@ -605,7 +605,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-dvh bg-background">
       {/* Left Navigation Rail */}
       {!isMobile && !isTablet && (
         <div className="w-14 border-r border-border bg-secondary flex flex-col items-center py-3 flex-shrink-0">

@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
+import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
 import { TrustedSendersModal } from '@/components/trusted-senders-modal';
-import { ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ChevronRight, Bell, BellOff } from 'lucide-react';
 
 export function EmailSettings() {
   const t = useTranslations('settings.email_behavior');
@@ -30,6 +32,7 @@ export function EmailSettings() {
   };
 
   return (
+    <>
     <SettingsSection title={t('title')} description={t('description')}>
       {/* Mark as Read */}
       <SettingItem label={t('mark_read.label')} description={t('mark_read.description')}>
@@ -106,6 +109,69 @@ export function EmailSettings() {
         isOpen={showTrustedModal}
         onClose={() => setShowTrustedModal(false)}
       />
+    </SettingsSection>
+
+    <PushNotificationSettings />
+    </>
+  );
+}
+
+function PushNotificationSettings() {
+  const t = useTranslations('push_notifications');
+  const { pushNotificationsEnabled, updateSetting } = useSettingsStore();
+  const { isSupported, permission, isSubscribed, isLoading, subscribe, unsubscribe } = usePushNotifications();
+
+  const handleToggle = async (enabled: boolean) => {
+    updateSetting('pushNotificationsEnabled', enabled);
+    if (enabled && !isSubscribed && permission !== 'denied') {
+      await subscribe();
+    } else if (!enabled && isSubscribed) {
+      await unsubscribe();
+    }
+  };
+
+  const handleResubscribe = async () => {
+    localStorage.removeItem('push-prompt-dismissed');
+    await subscribe();
+  };
+
+  const getStatusText = () => {
+    if (!isSupported) return t('not_supported');
+    if (permission === 'denied') return t('permission_denied');
+    if (isSubscribed) return t('subscribed');
+    return t('unsubscribed');
+  };
+
+  return (
+    <SettingsSection title={t('settings_title')} description={t('settings_description')}>
+      <SettingItem label={t('enable_title')} description={getStatusText()}>
+        <ToggleSwitch
+          checked={pushNotificationsEnabled && isSubscribed}
+          onChange={handleToggle}
+          disabled={!isSupported || permission === 'denied'}
+        />
+      </SettingItem>
+
+      {isSupported && !isSubscribed && permission !== 'denied' && (
+        <SettingItem label={t('resubscribe_label')} description={t('resubscribe_description')}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleResubscribe}
+            disabled={isLoading}
+            className="flex items-center gap-2"
+          >
+            <Bell className="w-4 h-4" />
+            {t('enable_button')}
+          </Button>
+        </SettingItem>
+      )}
+
+      {permission === 'denied' && (
+        <SettingItem label={t('blocked_label')} description={t('blocked_description')}>
+          <BellOff className="w-5 h-5 text-muted-foreground" />
+        </SettingItem>
+      )}
     </SettingsSection>
   );
 }

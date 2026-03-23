@@ -1446,6 +1446,12 @@
     "permission_denied": "通知の許可が拒否されました",
     "subscribed": "プッシュ通知が有効になりました",
     "unsubscribed": "プッシュ通知が無効になりました",
-    "not_supported": "このブラウザではプッシュ通知はサポートされていません"
+    "not_supported": "このブラウザではプッシュ通知はサポートされていません",
+    "settings_title": "プッシュ通知",
+    "settings_description": "アプリが閉じていても、新しいメールが届いたときに通知を受け取ります",
+    "resubscribe_label": "通知を有効にする",
+    "resubscribe_description": "許可をリクエストしてプッシュ通知に登録する",
+    "blocked_label": "通知がブロックされています",
+    "blocked_description": "通知はブラウザによってブロックされています。ブラウザの設定に移動して、このサイトの通知を許可してください。"
   }
 }

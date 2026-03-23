@@ -1446,6 +1446,12 @@
     "permission_denied": "Die Berechtigung für Benachrichtigungen wurde verweigert",
     "subscribed": "Push-Benachrichtigungen aktiviert",
     "unsubscribed": "Push-Benachrichtigungen deaktiviert",
-    "not_supported": "Push-Benachrichtigungen werden in diesem Browser nicht unterstützt"
+    "not_supported": "Push-Benachrichtigungen werden in diesem Browser nicht unterstützt",
+    "settings_title": "Push-Benachrichtigungen",
+    "settings_description": "Erhalten Sie Benachrichtigungen, wenn neue E-Mails eingehen, auch wenn die App geschlossen ist",
+    "resubscribe_label": "Benachrichtigungen aktivieren",
+    "resubscribe_description": "Berechtigung anfordern und Push-Benachrichtigungen abonnieren",
+    "blocked_label": "Benachrichtigungen blockiert",
+    "blocked_description": "Benachrichtigungen werden von Ihrem Browser blockiert. Gehen Sie zu Ihren Browsereinstellungen, um Benachrichtigungen für diese Website zuzulassen."
   }
 }

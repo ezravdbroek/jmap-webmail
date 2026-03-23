@@ -1446,6 +1446,12 @@
     "permission_denied": "L'autorisation de notification a été refusée",
     "subscribed": "Notifications push activées",
     "unsubscribed": "Notifications push désactivées",
-    "not_supported": "Les notifications push ne sont pas prises en charge dans ce navigateur"
+    "not_supported": "Les notifications push ne sont pas prises en charge dans ce navigateur",
+    "settings_title": "Notifications push",
+    "settings_description": "Recevez des notifications lorsqu'un nouvel e-mail arrive, même lorsque l'application est fermée",
+    "resubscribe_label": "Activer les notifications",
+    "resubscribe_description": "Demander l'autorisation et s'abonner aux notifications push",
+    "blocked_label": "Notifications bloquées",
+    "blocked_description": "Les notifications sont bloquées par votre navigateur. Accédez aux paramètres de votre navigateur pour autoriser les notifications pour ce site."
   }
 }

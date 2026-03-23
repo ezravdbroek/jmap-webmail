@@ -46,7 +46,7 @@ export default function SettingsPage() {
   const showingContent = activeTab !== null;
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-dvh bg-background">
       {/* Settings Sidebar - always visible on desktop, hidden on mobile when viewing content */}
       <div className={cn(
         "w-full md:w-64 border-r border-border bg-secondary flex flex-col",

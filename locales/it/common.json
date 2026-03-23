@@ -1446,6 +1446,12 @@
     "permission_denied": "L'autorizzazione alle notifiche è stata negata",
     "subscribed": "Notifiche push attivate",
     "unsubscribed": "Notifiche push disattivate",
-    "not_supported": "Le notifiche push non sono supportate in questo browser"
+    "not_supported": "Le notifiche push non sono supportate in questo browser",
+    "settings_title": "Notifiche push",
+    "settings_description": "Ricevi notifiche quando arriva una nuova email, anche quando l'app è chiusa",
+    "resubscribe_label": "Attiva le notifiche",
+    "resubscribe_description": "Richiedi l'autorizzazione e iscriviti alle notifiche push",
+    "blocked_label": "Notifiche bloccate",
+    "blocked_description": "Le notifiche sono bloccate dal tuo browser. Vai nelle impostazioni del browser per consentire le notifiche per questo sito."
   }
 }
