@@ -12,7 +12,7 @@ export function proxy(request: NextRequest) {
     ? `'self' 'nonce-${nonce}' 'unsafe-eval'`
     : `'self' 'nonce-${nonce}'`;
 
-  const connectSrc = isDev ? `'self' https: ws: wss:` : `'self' https:`;
+  const connectSrc = isDev ? `'self' https: ws: wss:` : `'self' https: wss:`;
 
   const csp = [
     `default-src 'self'`,
