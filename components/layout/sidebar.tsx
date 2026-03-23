@@ -588,18 +588,14 @@ export function Sidebar({
             className="h-8 w-auto"
           />
         ) : (
-          <>
+          <picture>
+            <source srcSet="/brandways-logo-dark.svg" media="(prefers-color-scheme: dark)" />
             <img
               src="/brandways-logo.svg"
               alt="Brandways"
-              className="h-8 w-auto block dark:!hidden"
+              className="h-8 w-auto logo-themed"
             />
-            <img
-              src="/brandways-logo-dark.svg"
-              alt="Brandways"
-              className="h-8 w-auto !hidden dark:!block"
-            />
-          </>
+          </picture>
         )}
       </div>
 

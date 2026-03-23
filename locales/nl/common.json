@@ -475,7 +475,7 @@
   },
   "settings": {
     "title": "Instellingen",
-    "back_to_mail": "Terug naar Mail",
+    "back_to_mail": "Terug naar e-mail",
     "save_success": "Instellingen succesvol opgeslagen",
     "import_success": "Instellingen succesvol geïmporteerd",
     "import_error": "Kan instellingen niet importeren",
@@ -896,7 +896,7 @@
       "subject_placeholder": "E-mailonderwerp",
       "body": "Inhoud",
       "body_placeholder": "E-mailinhoud...",
-      "recipients_placeholder": "email@example.com",
+      "recipients_placeholder": "email@voorbeeld.nl",
       "identity": "Verzenden als",
       "default_identity": "Standaard identiteit",
       "favorite": "Favoriet",
@@ -1132,7 +1132,7 @@
       "given_name": "Voornaam",
       "surname": "Achternaam",
       "email": "E-mail",
-      "email_placeholder": "email@example.com",
+      "email_placeholder": "email@voorbeeld.nl",
       "phone": "Telefoon",
       "phone_placeholder": "+31 20 123 4567",
       "organization": "Organisatie",
@@ -1439,5 +1439,15 @@
     "tip_settings": "Pas uw ervaring aan in Instellingen",
     "got_it": "Begrepen",
     "dismiss": "Sluiten"
+  },
+  "push_notifications": {
+    "enable_title": "Meldingen inschakelen",
+    "enable_description": "Ontvang een melding wanneer er nieuwe e-mail binnenkomt",
+    "enable_button": "Inschakelen",
+    "dismiss_button": "Niet nu",
+    "permission_denied": "Toestemming voor meldingen is geweigerd",
+    "subscribed": "Pushmeldingen ingeschakeld",
+    "unsubscribed": "Pushmeldingen uitgeschakeld",
+    "not_supported": "Pushmeldingen worden niet ondersteund in deze browser"
   }
 }

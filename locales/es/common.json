@@ -1437,5 +1437,15 @@
     "tip_settings": "Personaliza tu experiencia en Ajustes",
     "got_it": "Entendido",
     "dismiss": "Cerrar"
+  },
+  "push_notifications": {
+    "enable_title": "Activar notificaciones",
+    "enable_description": "Recibe una notificación cuando llegue un nuevo correo",
+    "enable_button": "Activar",
+    "dismiss_button": "Ahora no",
+    "permission_denied": "El permiso de notificación fue denegado",
+    "subscribed": "Notificaciones push activadas",
+    "unsubscribed": "Notificaciones push desactivadas",
+    "not_supported": "Las notificaciones push no son compatibles con este navegador"
   }
 }

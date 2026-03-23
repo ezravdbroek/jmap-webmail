@@ -1437,5 +1437,15 @@
   "confirm_dialog": {
     "confirm": "Confirmer",
     "cancel": "Annuler"
+  },
+  "push_notifications": {
+    "enable_title": "Activer les notifications",
+    "enable_description": "Soyez averti lorsqu'un nouvel e-mail arrive",
+    "enable_button": "Activer",
+    "dismiss_button": "Pas maintenant",
+    "permission_denied": "L'autorisation de notification a été refusée",
+    "subscribed": "Notifications push activées",
+    "unsubscribed": "Notifications push désactivées",
+    "not_supported": "Les notifications push ne sont pas prises en charge dans ce navigateur"
   }
 }

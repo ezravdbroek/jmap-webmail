@@ -1437,5 +1437,15 @@
     "tip_settings": "設定でカスタマイズできます",
     "got_it": "了解",
     "dismiss": "閉じる"
+  },
+  "push_notifications": {
+    "enable_title": "通知を有効にする",
+    "enable_description": "新しいメールが届いたら通知を受け取る",
+    "enable_button": "有効にする",
+    "dismiss_button": "後で",
+    "permission_denied": "通知の許可が拒否されました",
+    "subscribed": "プッシュ通知が有効になりました",
+    "unsubscribed": "プッシュ通知が無効になりました",
+    "not_supported": "このブラウザではプッシュ通知はサポートされていません"
   }
 }

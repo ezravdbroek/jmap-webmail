@@ -41,6 +41,9 @@ interface SettingsState {
   calendarNotificationsEnabled: boolean;
   calendarNotificationSound: boolean;
 
+  // Push Notifications
+  pushNotificationsEnabled: boolean;
+
   // Layout
   sidebarWidth: number;
 
@@ -92,6 +95,9 @@ const DEFAULT_SETTINGS = {
   // Calendar Notifications
   calendarNotificationsEnabled: true,
   calendarNotificationSound: true,
+
+  // Push Notifications
+  pushNotificationsEnabled: true,
 
   // Layout
   sidebarWidth: 256,

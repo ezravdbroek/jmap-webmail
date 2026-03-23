@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/stores/auth-store";
 import { useConfig } from "@/hooks/use-config";
 import { cn } from "@/lib/utils";
-import { Mail, AlertCircle, Loader2, X, Info, Eye, EyeOff, LogIn } from "lucide-react";
+import { AlertCircle, Loader2, X, Info, Eye, EyeOff, LogIn } from "lucide-react";
 import { discoverOAuth, type OAuthMetadata } from "@/lib/oauth/discovery";
 import { generateCodeVerifier, generateCodeChallenge, generateState } from "@/lib/oauth/pkce";
 import { OAUTH_SCOPES } from "@/lib/oauth/tokens";
@@ -302,16 +302,14 @@ export default function LoginPage() {
       <div className="w-full max-w-sm mx-auto px-4">
         {/* Logo */}
         <div className="text-center mb-12">
-          <img
-            src="/brandways-logo.svg"
-            alt="Brandways"
-            className="h-12 mx-auto mb-6 block dark:!hidden"
-          />
-          <img
-            src="/brandways-logo-dark.svg"
-            alt="Brandways"
-            className="h-12 mx-auto mb-6 !hidden dark:!block"
-          />
+          <picture className="mb-6">
+            <source srcSet="/brandways-logo-dark.svg" media="(prefers-color-scheme: dark)" />
+            <img
+              src="/brandways-logo.svg"
+              alt="Brandways"
+              className="h-12 mx-auto mb-6 logo-themed"
+            />
+          </picture>
           <h1 className="text-3xl font-light text-foreground tracking-tight">
             {appName}
           </h1>

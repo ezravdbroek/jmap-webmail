@@ -23,5 +23,6 @@ export async function GET() {
     oauthIssuerUrl: process.env.OAUTH_ISSUER_URL || '',
     oauthOnly: process.env.OAUTH_ONLY === 'true',
     rememberMeEnabled: !!process.env.SESSION_SECRET,
+    vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
   });
 }

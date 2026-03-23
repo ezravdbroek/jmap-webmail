@@ -5,6 +5,8 @@ services:
       - "3000:3000"
     env_file:
       - .env.local
+    volumes:
+      - push-data:/app/data/push-subscriptions
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
       interval: 30s
@@ -12,3 +14,6 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
+
+volumes:
+  push-data:

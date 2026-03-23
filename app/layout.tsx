@@ -15,8 +15,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JMAP Webmail",
-  description: "Minimalist webmail client using JMAP protocol",
+  title: {
+    default: "Brandways Webmail",
+    template: "%s | Brandways Webmail",
+  },
+  description: "Veilige en snelle webmail van Brandways. Beheer je e-mail, agenda en contacten op elk apparaat.",
+  keywords: ["webmail", "e-mail", "Brandways", "JMAP", "agenda", "contacten"],
+  authors: [{ name: "Brandways", url: "https://brandways.nl" }],
+  creator: "Brandways",
+  publisher: "Brandways",
+  applicationName: "Brandways Webmail",
+  metadataBase: new URL("https://mail.brandways.nl"),
+  openGraph: {
+    type: "website",
+    locale: "nl_NL",
+    siteName: "Brandways Webmail",
+    title: "Brandways Webmail",
+    description: "Veilige en snelle webmail van Brandways. Beheer je e-mail, agenda en contacten op elk apparaat.",
+  },
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default async function RootLayout({
@@ -30,6 +50,11 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#1a1a2e" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <link rel="apple-touch-icon" href="/brandways-icon.svg" />
         <script
           nonce={nonce}
           suppressHydrationWarning

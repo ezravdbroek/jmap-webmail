@@ -1437,5 +1437,15 @@
     "tip_settings": "Passen Sie Ihre Erfahrung in den Einstellungen an",
     "got_it": "Verstanden",
     "dismiss": "Schließen"
+  },
+  "push_notifications": {
+    "enable_title": "Benachrichtigungen aktivieren",
+    "enable_description": "Werden Sie benachrichtigt, wenn neue E-Mails eingehen",
+    "enable_button": "Aktivieren",
+    "dismiss_button": "Nicht jetzt",
+    "permission_denied": "Die Berechtigung für Benachrichtigungen wurde verweigert",
+    "subscribed": "Push-Benachrichtigungen aktiviert",
+    "unsubscribed": "Push-Benachrichtigungen deaktiviert",
+    "not_supported": "Push-Benachrichtigungen werden in diesem Browser nicht unterstützt"
   }
 }

@@ -42,6 +42,7 @@
     "react-dom": "^19.2.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
+    "web-push": "^3.6.7",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
@@ -54,6 +55,7 @@
     "@types/node": "^25.2.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@types/web-push": "^3.6.4",
     "@typescript-eslint/eslint-plugin": "^8.49.0",
     "@typescript-eslint/parser": "^8.49.0",
     "@vitejs/plugin-react": "^5.1.2",

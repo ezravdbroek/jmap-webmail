@@ -1437,5 +1437,15 @@
     "tip_settings": "Customize your experience in Settings",
     "got_it": "Got it",
     "dismiss": "Dismiss"
+  },
+  "push_notifications": {
+    "enable_title": "Enable notifications",
+    "enable_description": "Get notified when new email arrives",
+    "enable_button": "Enable",
+    "dismiss_button": "Not now",
+    "permission_denied": "Notification permission was denied",
+    "subscribed": "Push notifications enabled",
+    "unsubscribed": "Push notifications disabled",
+    "not_supported": "Push notifications are not supported in this browser"
   }
 }

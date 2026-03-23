@@ -10,6 +10,7 @@ interface ConfigData {
   oauthIssuerUrl: string;
   oauthOnly: boolean;
   rememberMeEnabled: boolean;
+  vapidPublicKey: string;
 }
 
 interface AppConfig extends ConfigData {
@@ -67,6 +68,7 @@ export function useConfig(): AppConfig {
     oauthIssuerUrl: configCache?.oauthIssuerUrl || '',
     oauthOnly: configCache?.oauthOnly || false,
     rememberMeEnabled: configCache?.rememberMeEnabled || false,
+    vapidPublicKey: configCache?.vapidPublicKey || '',
     isLoading: !configCache,
     error: null,
   });
@@ -82,6 +84,7 @@ export function useConfig(): AppConfig {
         oauthIssuerUrl: configCache.oauthIssuerUrl,
         oauthOnly: configCache.oauthOnly,
         rememberMeEnabled: configCache.rememberMeEnabled,
+        vapidPublicKey: configCache.vapidPublicKey,
         isLoading: false,
         error: null,
       });
@@ -98,6 +101,7 @@ export function useConfig(): AppConfig {
           oauthIssuerUrl: data.oauthIssuerUrl,
           oauthOnly: data.oauthOnly,
           rememberMeEnabled: data.rememberMeEnabled,
+          vapidPublicKey: data.vapidPublicKey,
           isLoading: false,
           error: null,
         });
