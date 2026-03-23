@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
         } catch { return false; }
       })();
       if (!isBearer && !isRaw && !isBasic) {
-        logger.warn('Webhook request with invalid secret');
+        logger.warn(`Webhook auth failed. Header: "${authHeader.substring(0, 50)}"`);
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
