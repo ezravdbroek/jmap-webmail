@@ -52,7 +52,7 @@ export function NavigationRail({
   if (orientation === "horizontal") {
     return (
       <nav
-        className={cn("flex items-center justify-around bg-background border-t border-border relative z-10", className)}
+        className={cn("flex items-center justify-around bg-background border-t border-border relative z-10 pb-[env(safe-area-inset-bottom)]", className)}
         role="navigation"
         aria-label={t("nav_label")}
       >

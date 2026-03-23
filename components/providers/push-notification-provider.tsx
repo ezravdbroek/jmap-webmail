@@ -59,7 +59,7 @@ function PushNotificationPrompt() {
   if (!showPrompt) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 max-w-sm w-full animate-in slide-in-from-bottom-4 fade-in duration-300">
+    <div className="fixed bottom-20 left-4 right-4 sm:left-auto sm:right-4 z-50 max-w-sm w-auto sm:w-full animate-in slide-in-from-bottom-4 fade-in duration-300">
       <div className="bg-card border border-border rounded-xl shadow-lg p-4">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">

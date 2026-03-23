@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
-import { ArrowLeft, Settings as SettingsIcon } from 'lucide-react';
+import { ArrowLeft, Settings as SettingsIcon, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppearanceSettings } from '@/components/settings/appearance-settings';
 import { EmailSettings } from '@/components/settings/email-settings';
@@ -23,7 +23,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const t = useTranslations('settings');
   const { client } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<Tab>('appearance');
+  const [activeTab, setActiveTab] = useState<Tab | null>(null);
 
   const supportsVacation = client?.supportsVacationResponse() ?? false;
   const supportsCalendar = client?.supportsCalendars() ?? false;
@@ -41,10 +41,17 @@ export default function SettingsPage() {
     { id: 'advanced', label: t('tabs.advanced') },
   ];
 
+  // On mobile: show tab list or active tab content
+  // On desktop: show sidebar + content side by side
+  const showingContent = activeTab !== null;
+
   return (
     <div className="flex h-screen bg-background">
-      {/* Settings Sidebar */}
-      <div className="w-64 border-r border-border bg-secondary flex flex-col">
+      {/* Settings Sidebar - always visible on desktop, hidden on mobile when viewing content */}
+      <div className={cn(
+        "w-full md:w-64 border-r border-border bg-secondary flex flex-col",
+        showingContent && "hidden md:flex"
+      )}>
         {/* Header */}
         <div className="p-4 border-b border-border">
           <Button
@@ -58,32 +65,59 @@ export default function SettingsPage() {
           </Button>
         </div>
 
+        {/* Mobile title */}
+        <div className="md:hidden p-4 pb-2">
+          <div className="flex items-center gap-3">
+            <SettingsIcon className="w-6 h-6 text-foreground" />
+            <h1 className="text-xl font-semibold text-foreground">{t('title')}</h1>
+          </div>
+        </div>
+
         {/* Tabs */}
-        <div className="flex-1 overflow-y-auto py-2">
+        <div className="flex-1 overflow-y-auto py-2 pb-[env(safe-area-inset-bottom)]">
           <div className="px-2 space-y-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'w-full text-left px-3 py-2 rounded text-sm transition-colors',
+                  'w-full text-left px-3 py-3 md:py-2 rounded text-sm transition-colors flex items-center justify-between',
                   activeTab === tab.id
                     ? 'bg-accent text-accent-foreground'
                     : 'hover:bg-muted text-foreground'
                 )}
               >
-                {tab.label}
+                <span>{tab.label}</span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground md:hidden" />
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Settings Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto p-8">
-          {/* Page Header */}
-          <div className="mb-8">
+      {/* Settings Content - always visible on desktop, shown on mobile when tab selected */}
+      <div className={cn(
+        "flex-1 overflow-y-auto",
+        !showingContent && "hidden md:block"
+      )}>
+        {/* Mobile back button */}
+        {showingContent && (
+          <div className="md:hidden p-4 border-b border-border bg-background sticky top-0 z-10">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setActiveTab(null)}
+              className="justify-start -ml-2"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              {tabs.find(t => t.id === activeTab)?.label}
+            </Button>
+          </div>
+        )}
+
+        <div className="max-w-3xl mx-auto p-4 md:p-8 pb-[env(safe-area-inset-bottom)]">
+          {/* Page Header - desktop only */}
+          <div className="mb-8 hidden md:block">
             <div className="flex items-center gap-3 mb-2">
               <SettingsIcon className="w-8 h-8 text-foreground" />
               <h1 className="text-3xl font-semibold text-foreground">{t('title')}</h1>
@@ -91,16 +125,16 @@ export default function SettingsPage() {
           </div>
 
           {/* Active Tab Content */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            {activeTab === 'appearance' && <AppearanceSettings />}
-            {activeTab === 'email' && <EmailSettings />}
-            {activeTab === 'account' && <AccountSettings />}
-            {activeTab === 'identities' && <IdentitySettings />}
-            {activeTab === 'vacation' && <VacationSettings />}
-            {activeTab === 'calendar' && <CalendarSettings />}
-            {activeTab === 'filters' && <FilterSettings />}
-            {activeTab === 'templates' && <TemplateSettings />}
-            {activeTab === 'advanced' && <AdvancedSettings />}
+          <div className="bg-card border border-border rounded-lg p-4 md:p-6">
+            {(activeTab === null || activeTab === 'appearance') && <AppearanceSettings />}
+              {activeTab === 'email' && <EmailSettings />}
+              {activeTab === 'account' && <AccountSettings />}
+              {activeTab === 'identities' && <IdentitySettings />}
+              {activeTab === 'vacation' && <VacationSettings />}
+              {activeTab === 'calendar' && <CalendarSettings />}
+              {activeTab === 'filters' && <FilterSettings />}
+              {activeTab === 'templates' && <TemplateSettings />}
+              {activeTab === 'advanced' && <AdvancedSettings />}
           </div>
         </div>
       </div>
